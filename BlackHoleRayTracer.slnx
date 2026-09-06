@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="BlackHoleRayTracer.Tests/BlackHoleRayTracer.Tests.csproj" Id="957b1842-cbb5-45f8-8ff1-fd6489caabed" />
+  <Project Path="BlackHoleRayTracer/BlackHoleRayTracer.csproj" />
+</Solution>
