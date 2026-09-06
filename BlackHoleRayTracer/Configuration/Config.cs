@@ -26,12 +26,12 @@ public static class Config
   #endregion
 
   /// <summary>Image (single video) or Video.</summary>
-  public const RunMode Mode = RunMode.FreeFall;
+  public const RunMode Mode = RunMode.Image;
 
   public static class Camera
   {
     /// <summary>Distance to the black hole, in rs. Must be > 1.</summary>
-    public const float R = 50.0f;
+    public const float R = 10.0f;
     /// <summary>
     /// Colatitude. 90 deg = edge-on to the disk (maximum Doppler, disk seen as a line);
     /// 0 deg = viewed from the pole. Between 80 deg and 85 deg is where the far-side arc
@@ -86,7 +86,7 @@ public static class Config
   public static class Disk
   {
     /// <summary>Enables the accretion disk.</summary>
-    public const bool DiskEnabled = true;
+    public const bool DiskEnabled = false;
     /// <summary>Inner edge of the disk, in rs. The ISCO is at 6M = 3*rs.</summary>
     public const float DiskInner = 3.0f;
     /// <summary>Outer edge of the disk, in rs.</summary>
@@ -109,7 +109,7 @@ public static class Config
   public static class Back
   {
     /// <summary>Background to represent the scaped rays.</summary>
-    public const BackgroundType BackType = BackgroundType.Image;
+    public const BackgroundType BackType = BackgroundType.Checker;
     /// <summary>The path for the image background must be provided if BackType == BackgroundType.Image</summary>
     public const string? BackImagePath = @"C:\dev\BlackHoleRayTracer\Assets\convertio.in_starmap_2020_4k_print-4109719988.hdr";
   }

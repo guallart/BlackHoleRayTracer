@@ -3,6 +3,8 @@
 A GPU-accelerated renderer that solves null geodesics in the Schwarzschild spacetime and shades a relativistic accretion disk. Written in C# with [ILGPU](https://ilgpu.net/); every stage of the pipeline (ray generation, integration, shading, downsampling, tone mapping) runs as a kernel on the GPU. It produces both single images and videos along an interpolated camera path.
 
 ![](Assets/render1.png)
+![](Assets/render2.png)
+![](Assets/render3.png)
 
 
 ## What it actually computes
@@ -15,9 +17,9 @@ Everything is in geometrized units ($G = c = 1$), with the Schwarzschild radius 
 
 Schwarzschild spacetime is spherically symmetric, so every geodesic stays in a single plane through the centre. That is the key simplification of the whole tracer: instead of integrating four coupled equations in $(t, r, \theta, \phi)$, each ray is rotated into its own orbital plane and integrated as a 2D problem with two conserved quantities, the energy $E$ and the angular momentum $L$:
 
-$$\frac{dr}{d\lambda} = p_r, \qquad \frac{d\phi}{d\lambda} = \frac{L}{r^2}, \qquad \frac{dp_r}{d\lambda} = \frac{L^2\,(r - 1.5\,R_s)}{r^4}$$
+$$\frac{dr}{d\lambda} = p_r, \qquad \frac{d\phi}{d\lambda} = \frac{L}{r^2}, \qquad \frac{dp_r}{d\lambda} = \frac{L^2 (r - 1.5 R_s)}{r^4}$$
 
-The sign change of the last equation at $r = 1.5\,R_s = 3M$ is the photon sphere: outside it the effective potential pushes photons out, inside it pulls them in. This is what produces the black hole's shadow (radius $b = \sqrt{27}\,M \approx 2.6\,R_s$ in impact parameter) and the thin, infinitely layered photon ring around it, where rays that orbited the hole one or more times before escaping pile up.
+The sign change of the last equation at $r = 1.5 R_s = 3M$ is the photon sphere: outside it the effective potential pushes photons out, inside it pulls them in. This is what produces the black hole's shadow (radius $b = \sqrt{27} M \approx 2.6 R_s$ in impact parameter) and the thin, infinitely layered photon ring around it, where rays that orbited the hole one or more times before escaping pile up.
 
 Because each ray lives in a different plane, the state also carries the orthonormal basis $(\mathbf{e}_1, \mathbf{e}_2)$ of that plane, fixed at generation time, so the 3D position can always be recovered:
 
@@ -29,25 +31,25 @@ Without it, a disk crossing (which happens in the global equatorial plane, not t
 
 The camera is a static observer at radius $R$, using its local orthonormal tetrad. The photon's local unit direction $\mathbf{n}$ gives, with $f = 1 - R_s/R$:
 
-$$E = \sqrt{f}, \qquad L = R\,n_t, \qquad p_r = n_r \sqrt{f}$$
+$$E = \sqrt{f}, \qquad L = R n_t, \qquad p_r = n_r \sqrt{f}$$
 
 where $n_r$ and $n_t$ are the radial and tangential components of $\mathbf{n}$. This reproduces the standard static-observer relation for the impact parameter, $\sin\alpha = b\sqrt{f}/R$ with $b = L/E$.
 
 ### The accretion disk
 
-A geometrically thin, optically thick disk in the equatorial plane, between a configurable inner radius (default $3\,R_s = 6M$, the ISCO) and outer radius. Its temperature follows the Shakura-Sunyaev profile:
+A geometrically thin, optically thick disk in the equatorial plane, between a configurable inner radius (default $3 R_s = 6M$, the ISCO) and outer radius. Its temperature follows the Shakura-Sunyaev profile:
 
 $$T(r) \propto r^{-3/4} \left( 1 - \sqrt{r_{in}/r} \right)^{1/4}$$
 
-which vanishes at the inner edge because the viscous torque does, and peaks analytically at $r = (49/36)\,r_{in}$.
+which vanishes at the inner edge because the viscous torque does, and peaks analytically at $r = (49/36) r_{in}$.
 
 The material follows circular Keplerian orbits, $\Omega = \sqrt{M/r^3}$, so the observed radiation is shifted by the combined Doppler and gravitational factor
 
-$$g = \frac{\sqrt{1 - 3M/r}}{1 - \Omega\,b_z}, \qquad b_z = \frac{L_z}{E}$$
+$$g = \frac{\sqrt{1 - 3M/r}}{1 - \Omega b_z}, \qquad b_z = \frac{L_z}{E}$$
 
-Here $b_z$ is the photon's angular momentum projected on the global $z$ axis, which is invariant under rotations about that axis; it is recovered from $L$ and the plane normal $\mathbf{e}_1 \times \mathbf{e}_2$. Since the specific intensity ratio $I_\nu/\nu^3$ is a relativistic invariant and Planck's law rescales onto itself, the observed spectrum is exactly a black body at $T_{obs} = g\,T_{em}$. The $g^4$ relativistic beaming therefore needs no special handling: it falls out of the Stefan-Boltzmann $T^4$ brightness. The practical result is the familiar asymmetry, with the side of the disk rotating toward the observer far brighter and bluer than the receding side.
+Here $b_z$ is the photon's angular momentum projected on the global $z$ axis, which is invariant under rotations about that axis; it is recovered from $L$ and the plane normal $\mathbf{e}_1 \times \mathbf{e}_2$. Since the specific intensity ratio $I_\nu/\nu^3$ is a relativistic invariant and Planck's law rescales onto itself, the observed spectrum is exactly a black body at $T_{obs} = g T_{em}$. The $g^4$ relativistic beaming therefore needs no special handling: it falls out of the Stefan-Boltzmann $T^4$ brightness. The practical result is the familiar asymmetry, with the side of the disk rotating toward the observer far brighter and bluer than the receding side.
 
-A co-rotating value-noise pattern modulates the emission with phase $\phi - \Omega(r)\,t$, which produces Keplerian shear (inner material outrunning outer material) and reads as an actually spinning disk in video rather than a texture glued to a surface. The noise is periodic along the angular axis, since otherwise a seam at $\phi = 0$ rotates through the frame and is very visible in motion.
+A co-rotating value-noise pattern modulates the emission with phase $\phi - \Omega(r) t$, which produces Keplerian shear (inner material outrunning outer material) and reads as an actually spinning disk in video rather than a texture glued to a surface. The noise is periodic along the angular axis, since otherwise a seam at $\phi = 0$ rotates through the frame and is very visible in motion.
 
 ### Colour
 
@@ -62,18 +64,18 @@ Integrator. Classical RK4 in the affine parameter $\lambda$, in single precision
 
 Adaptive step size. The step is the minimum of several limits:
 
-- a length-scale limit, $h = \text{safety} \cdot \min(r,\, r - R_s) / |\dot{\mathbf{x}}|$, which shrinks the step near the horizon and lets it grow freely far away (most of a ray's journey out to the escape radius costs very few steps);
+- a length-scale limit, $h = \text{safety} \cdot \min(r,  r - R_s) / |\dot{\mathbf{x}}|$, which shrinks the step near the horizon and lets it grow freely far away (most of a ray's journey out to the escape radius costs very few steps);
 - an angular limit, $\Delta\phi \le 0.05$ rad per step, so strongly deflected rays stay resolved;
-- an extra refinement factor inside a band of $0.5\,R_s$ around the photon sphere, where trajectories are most sensitive;
-- hard clamps to $[10^{-4},\, 100]$ in $\lambda$.
+- an extra refinement factor inside a band of $0.5 R_s$ around the photon sphere, where trajectories are most sensitive;
+- hard clamps to $[10^{-4},  100]$ in $\lambda$.
 
 RK4 is fourth order, so halving the safety factor cuts the local error by a factor of 16. The default safety factor of 0.1 is a compromise; lowering it mainly matters for the sharpness of the photon ring.
 
-Termination. A ray is absorbed at $r \le R_s(1 + 10^{-4})$, escaped at $r \ge 2000\,R_s$, or flagged `MaxStepsReached` after 5000 steps. That last status is treated as suspect but still shaded (using the best available direction estimate) and is reported separately in the statistics, so a bad configuration shows up as a visible magenta region in debug mode instead of silently corrupting the image.
+Termination. A ray is absorbed at $r \le R_s(1 + 10^{-4})$, escaped at $r \ge 2000 R_s$, or flagged `MaxStepsReached` after 5000 steps. That last status is treated as suspect but still shaded (using the best available direction estimate) and is reported separately in the statistics, so a bad configuration shows up as a visible magenta region in debug mode instead of silently corrupting the image.
 
 Escape direction. The skybox is sampled with the ray's asymptotic propagation direction, not its position direction. At finite radius these differ, and the propagation direction converges much faster: the residual error is $O(R_s/r)$, on the order of $10^{-3}$ rad at the default escape radius.
 
-Disk intersection. For a ray whose orbital plane is not the disk plane, the crossing is detected by a sign change of the signed height $z(\lambda) = r\,(\cos\phi\; e_{1z} + \sin\phi\; e_{2z})$, and the impact point is recovered by linear interpolation in $z$ between the two bracketing states. Since the signs differ there is no catastrophic cancellation in the interpolation weight. Rays whose plane coincides with the disk (within a tolerance of $10^{-6}$, comfortably above float epsilon) are handled by a separate radial test, since they never cross zero.
+Disk intersection. For a ray whose orbital plane is not the disk plane, the crossing is detected by a sign change of the signed height $z(\lambda) = r (\cos\phi\; e_{1z} + \sin\phi\; e_{2z})$, and the impact point is recovered by linear interpolation in $z$ between the two bracketing states. Since the signs differ there is no catastrophic cancellation in the interpolation weight. Rays whose plane coincides with the disk (within a tolerance of $10^{-6}$, comfortably above float epsilon) are handled by a separate radial test, since they never cross zero.
 
 Supersampling. N by N per pixel (default 2 by 2), averaged in linear space. This is the dominant cost of the whole render: going from 2 to 3 multiplies the time by 2.25. Without supersampling the shadow edge and the photon ring are visibly jagged.
 
